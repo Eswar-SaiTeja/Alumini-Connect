@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String
+  role         String             @default("ALUMNI") // SUPER_ADMIN, ADMIN, CONTENT_MANAGER, ALUMNI
+  status       String             @default("APPROVED") // PENDING, APPROVED, REJECTED, SUSPENDED
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  profile      AlumniProfile?
+  registrations EventRegistration[]
+  notifications Notification[]
+}
+
+model AlumniProfile {
+  id                 String           @id @default(uuid())
+  userId             String           @unique
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  graduationYear     Int
+  department         String
+  degree             String
+  studentId          String?
+  currentCompany     String?
+  currentDesignation String?
+  industry           String?
+  city               String?
+  state              String?
+  country            String?          @default("India")
+  bio                String?
+  profilePhoto       String?
+  phone              String?
+  linkedIn           String?
+  github             String?
+  website            String?
+  emailPrivacy       String           @default("ALUMNI_ONLY") // PUBLIC, ALUMNI_ONLY, PRIVATE
+  phonePrivacy       String           @default("PRIVATE")     // PUBLIC, ALUMNI_ONLY, PRIVATE
+  companyPrivacy     String           @default("PUBLIC")      // PUBLIC, ALUMNI_ONLY, PRIVATE
+  isFeatured         Boolean          @default(false)
+  isVerified         Boolean          @default(true)
+  experiences        WorkExperience[]
+  educations         Education[]
+  skills             AlumniSkill[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model WorkExperience {
+  id          String        @id @default(uuid())
+  alumniId    String
+  alumni      AlumniProfile @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+  title       String
+  company     String
+  location    String?
+  startDate   String
+  endDate     String?
+  isCurrent   Boolean       @default(false)
+  description String?
+  createdAt   DateTime      @default(now())
+}
+
+model Education {
+  id           String        @id @default(uuid())
+  alumniId     String
+  alumni       AlumniProfile @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+  institution  String
+  degree       String
+  fieldOfStudy String?
+  startYear    Int
+  endYear      Int?
+  createdAt    DateTime      @default(now())
+}
+
+model AlumniSkill {
+  id       String        @id @default(uuid())
+  alumniId String
+  alumni   AlumniProfile @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+  name     String
+}
+
+model Event {
+  id                   String              @id @default(uuid())
+  title                String
+  description          String
+  category             String              @default("REUNION") // REUNION, WEBINAR, WORKSHOP, CAREER, CULTURAL, SPORTS
+  bannerImage          String?
+  eventDate            String
+  time                 String
+  venue                String
+  isOnline             Boolean             @default(false)
+  onlineLink           String?
+  speaker              String?
+  organizer            String              @default("GCRJY Alumni Association")
+  capacity             Int                 @default(200)
+  registrationDeadline String?
+  isPublished          Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  registrations        EventRegistration[]
+}
+
+model EventRegistration {
+  id               String   @id @default(uuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  alumniName       String
+  alumniEmail      String
+  alumniPhone      String?
+  ticketNumber     String   @unique
+  attendanceStatus String   @default("REGISTERED") // REGISTERED, ATTENDED, CANCELLED
+  createdAt        DateTime @default(now())
+}
+
+model NewsAnnouncement {
+  id            String   @id @default(uuid())
+  title         String
+  subtitle      String?
+  content       String
+  category      String   @default("COLLEGE_NEWS") // COLLEGE_NEWS, ALUMNI_NEWS, ANNOUNCEMENT, ACHIEVEMENT, CAREER, COMMUNITY
+  featuredImage String?
+  author        String   @default("College Administration")
+  tags          String?  // comma-separated tags
+  isPublished   Boolean  @default(true)
+  publishDate   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SuccessStory {
+  id               String   @id @default(uuid())
+  alumniName       String
+  batch            Int
+  department       String
+  achievementTitle String
+  story            String
+  careerInfo       String?
+  photoUrl         String?
+  isFeatured       Boolean  @default(false)
+  isPublished      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  title       String
+  category    String   @default("CAMPUS") // CAMPUS, ALUMNI_MEETS, EVENTS, REUNIONS, ACHIEVEMENTS, ACTIVITIES
+  imageUrl    String
+  videoUrl    String?
+  caption     String?
+  isPublished Boolean  @default(true)
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?  // null means broadcast notification
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // EVENT, ANNOUNCEMENT, ALUMNI, SYSTEM, MESSAGE
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  phone      String?
+  subject    String
+  message    String
+  status     String   @default("NEW") // NEW, READ, REPLIED, ARCHIVED
+  replyNotes String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  adminEmail String
+  action     String   // e.g. "PUBLISHED_EVENT", "VERIFIED_ALUMNI", "UPDATED_SETTINGS"
+  entityType String   // e.g. "Event", "AlumniProfile", "NewsAnnouncement"
+  entityId   String?
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  group     String   @default("GENERAL") // GENERAL, BRANDING, CONTACT, HERO, STATS, FOOTER
+  updatedAt DateTime @updatedAt
+}
