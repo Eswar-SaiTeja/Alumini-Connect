@@ -2,15 +2,17 @@
   "name": "gcrjy-alumni-platform",
   "version": "1.0.0",
   "description": "Government College (Autonomous), Rajahmundry — Alumni Management & Connect Platform",
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run dev:server\" \"npm run dev:client\"",
-    "build:server": "cd server && npm run build",
-    "build:client": "cd client && npm run build",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build --workspace=client && npm run build --workspace=server",
     "start": "cd server && npm start",
-    "db:seed": "cd server && npm run prisma:seed"
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "db:seed": "npm run prisma:seed --workspace=server"
   },
   "devDependencies": {
     "concurrently": "^9.2.4"
