@@ -33,7 +33,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     // Determine socket endpoint
-    const socketUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin;
+    const socketUrl =
+      import.meta.env.VITE_API_URL ||
+      (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const socketClient = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 10,
