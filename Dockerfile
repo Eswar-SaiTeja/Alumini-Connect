@@ -12,7 +12,7 @@ RUN apk add --no-cache openssl libc6-compat
 FROM base AS client-builder
 WORKDIR /app/client
 COPY client/package*.json ./
-RUN npm ci
+RUN npm install
 COPY client/ ./
 RUN npm run build
 
@@ -21,31 +21,27 @@ FROM base AS server-builder
 WORKDIR /app/server
 COPY server/package*.json ./
 COPY server/prisma ./prisma/
-RUN npm ci
+RUN npm install
 COPY server/ ./
 RUN npx prisma generate
 RUN npm run build
 
 # 4. Production Runner
 FROM base AS runner
-WORKDIR /app
+WORKDIR /app/server
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# Copy root configs & server dependencies
-COPY package*.json ./
-WORKDIR /app/server
-COPY server/package*.json ./
-COPY server/prisma ./prisma/
-RUN npm ci --only=production
-RUN npx prisma generate
-
-# Copy built server assets and client bundle
+# Copy node_modules, generated Prisma engine, and built files directly from server-builder
+COPY --from=server-builder /app/server/package*.json ./
+COPY --from=server-builder /app/server/node_modules ./node_modules
 COPY --from=server-builder /app/server/dist ./dist
 COPY --from=server-builder /app/server/prisma ./prisma
+
+# Copy built frontend assets
 COPY --from=client-builder /app/client/dist /app/client/dist
 
-# Create uploads directory and seed database if missing
+# Create uploads directory
 RUN mkdir -p /app/server/uploads
 
 EXPOSE 5000

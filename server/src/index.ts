@@ -44,7 +44,14 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve client production build if available
 const clientDistPath = path.join(__dirname, '../../client/dist');
 const altClientDistPath = path.join(__dirname, '../client/dist');
-const resolvedClientDist = fs.existsSync(clientDistPath) ? clientDistPath : fs.existsSync(altClientDistPath) ? altClientDistPath : null;
+const dockerClientDist = '/app/client/dist';
+const resolvedClientDist = fs.existsSync(clientDistPath)
+  ? clientDistPath
+  : fs.existsSync(altClientDistPath)
+  ? altClientDistPath
+  : fs.existsSync(dockerClientDist)
+  ? dockerClientDist
+  : null;
 
 if (resolvedClientDist) {
   app.use(express.static(resolvedClientDist));
