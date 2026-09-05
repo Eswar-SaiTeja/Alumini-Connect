@@ -4,9 +4,17 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding for Government College Rajahmundry Alumni Connect...');
+  console.log('🌱 Checking database status for Government College Rajahmundry Alumni Connect...');
 
-  // Clean existing tables
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    console.log(`Database already initialized with ${userCount} users. Preserving existing data.`);
+    return;
+  }
+
+  console.log('Database empty. Seeding initial institutional records, alumni, events, and settings...');
+
+  // Clean existing tables (if partial)
   await prisma.auditLog.deleteMany();
   await prisma.contactMessage.deleteMany();
   await prisma.notification.deleteMany();

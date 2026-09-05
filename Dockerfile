@@ -46,4 +46,4 @@ RUN mkdir -p /app/server/uploads
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma db push && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma db push && npx tsx prisma/seed.ts && node dist/index.js"]
